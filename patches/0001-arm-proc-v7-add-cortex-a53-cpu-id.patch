@@ -1,0 +1,37 @@
+ARM: proc-v7.S: Add Cortex-A53 proc_info for AArch32 mode
+
+The Cortex-A53 (MIDR 0x410fd03x) supports AArch32 at all exception
+levels including EL1 (kernel). When running a 32-bit ARM kernel on
+an ARMv8 SoC in AArch32 mode (e.g., Allwinner H6 without RMR switch),
+the kernel needs a proc_info entry to properly initialize the CPU.
+
+Without this patch, the A53 falls through to the generic __v7_proc_info
+which does not set up SMP correctly for the core.
+
+The A53 uses the same setup path as A7/A12/A15/A17 since it is a
+multi-core ARMv8 processor where cache/TLB broadcasting is implicit.
+
+--- a/arch/arm/mm/proc-v7.S
++++ b/arch/arm/mm/proc-v7.S
+@@ -SETUP_LABELS
+ __v7_ca7mp_setup:
+ __v7_ca12mp_setup:
+ __v7_ca15mp_setup:
+ __v7_b15mp_setup:
+ __v7_ca17mp_setup:
++__v7_ca53mp_setup:
+ 	do_invalidate_l1
+ 	mov	r10, #0
+
+@@ -PROC_INFO_SECTION (after __v7_ca17mp_proc_info)
+
++	/*
++	 * ARM Ltd. Cortex A53 processor (in AArch32 mode).
++	 * MIDR: 0x410fd03x
++	 */
++	.type	__v7_ca53mp_proc_info, #object
++__v7_ca53mp_proc_info:
++	.long	0x410fd030
++	.long	0xff0ffff0
++	__v7_proc __v7_ca53mp_proc_info, __v7_ca53mp_setup, proc_fns = HARDENED_BPIALL_PROCESSOR_FUNCTIONS
++	.size	__v7_ca53mp_proc_info, . - __v7_ca53mp_proc_info
