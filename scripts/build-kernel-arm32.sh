@@ -130,6 +130,44 @@ config MACH_SUN50I\
     fi
 fi
 
+# --- Add Cortex-A53 CPU ID to proc-v7.S ---
+# The Cortex-A53 (MIDR 0x410fd03x) runs AArch32 at all exception levels
+# but has no proc_info entry in the 32-bit ARM kernel. Without this, the
+# kernel falls through to the generic v7 fallback which doesn't properly
+# initialize SMP for the core.
+PROC_V7="arch/arm/mm/proc-v7.S"
+if [ -f "$PROC_V7" ]; then
+    if ! grep -q "ca53mp" "$PROC_V7"; then
+        echo "Adding Cortex-A53 CPU ID to proc-v7.S..."
+
+        # 1. Add setup label: __v7_ca53mp_setup alongside the A7/A12/A15/A17 group
+        #    (these cores use mov r10, #0 - no explicit broadcasting needed)
+        sed -i '/__v7_ca17mp_setup:/a\
+__v7_ca53mp_setup:' "$PROC_V7"
+
+        # 2. Add proc_info entry after __v7_ca17mp_proc_info block
+        #    MIDR 0x410fd030, mask 0xff0ffff0 (matches Cortex-A53 rXpY)
+        sed -i '/\.size\t__v7_ca17mp_proc_info/a\
+\
+\t/*\
+\t * ARM Ltd. Cortex A53 processor (AArch32 mode).\
+\t * MIDR: 0x410fd03x\
+\t */\
+\t.type\t__v7_ca53mp_proc_info, #object\
+__v7_ca53mp_proc_info:\
+\t.long\t0x410fd030\
+\t.long\t0xff0ffff0\
+\t__v7_proc __v7_ca53mp_proc_info, __v7_ca53mp_setup, proc_fns = HARDENED_BPIALL_PROCESSOR_FUNCTIONS\
+\t.size\t__v7_ca53mp_proc_info, . - __v7_ca53mp_proc_info' "$PROC_V7"
+
+        echo "  Added Cortex-A53 (0x410fd03x) proc_info entry"
+    else
+        echo "  Cortex-A53 CPU ID already present in proc-v7.S"
+    fi
+else
+    echo "WARNING: proc-v7.S not found at $PROC_V7"
+fi
+
 # --- Configure kernel ---
 echo "Configuring kernel..."
 
