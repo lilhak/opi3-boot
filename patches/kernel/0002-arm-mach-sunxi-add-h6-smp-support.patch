@@ -1,0 +1,209 @@
+From: Nigel <nigelgbot@gmail.com>
+Subject: [PATCH] ARM: mach-sunxi: Add H6 SMP support for AArch32 mode
+
+The Allwinner H6 (sun50i) can run in AArch32 mode with a 32-bit kernel.
+This patch adds SMP support using direct CPUCFG register manipulation,
+similar to the existing sun6i/sun8i implementations.
+
+The H6 uses a different CPUCFG register layout (NCAT variant):
+- CPUCFG base: 0x09010000
+- R_CPUCFG base: 0x07000400
+
+Key differences from sun8i:
+- RVBAR registers for setting CPU entry point (not PRIVATE0)
+- Per-CPU control registers at different offsets
+- AA64nAA32 bit must be cleared to boot in AArch32 mode
+- Power clamp registers at R_CPUCFG + 0x50
+
+Signed-off-by: Nigel <nigelgbot@gmail.com>
+---
+ arch/arm/mach-sunxi/platsmp.c | 156 ++++++++++++++++++++++++++++++++++
+ 1 file changed, 156 insertions(+)
+
+diff --git a/arch/arm/mach-sunxi/platsmp.c b/arch/arm/mach-sunxi/platsmp.c
+index 1f535d4..XXXXXXX 100644
+--- a/arch/arm/mach-sunxi/platsmp.c
++++ b/arch/arm/mach-sunxi/platsmp.c
+@@ -17,6 +17,7 @@
+ #include <linux/of.h>
+ #include <linux/of_address.h>
+ #include <linux/smp.h>
++#include <asm/cacheflush.h>
+ 
+ #define CPUCFG_CPU_PWR_CLAMP_STATUS_REG(cpu)	((cpu) * 0x40 + 0x64)
+ #define CPUCFG_CPU_RST_CTRL_REG(cpu)		(((cpu) + 1) * 0x40)
+@@ -28,6 +29,27 @@
+ #define CPUCFG_DBG_CTL0_REG			0x1e0
+ #define CPUCFG_DBG_CTL1_REG			0x1e4
+ 
++/* H6 (sun50i) CPUCFG registers - NCAT variant */
++#define H6_CPUCFG_RST_CTRL_REG(c)		(0x0000 + (c) * 4)
++#define H6_CPUCFG_CLS_CTRL_REG0(c)		(0x0010 + (c) * 0x10)
++#define H6_CPUCFG_RVBAR_LO_REG(n)		(0x0040 + (n) * 8)
++#define H6_CPUCFG_RVBAR_HI_REG(n)		(0x0044 + (n) * 8)
++#define H6_CPUCFG_DBG_REG0			0x00c0
++#define H6_C0_CPU_CTRL_REG(n)			(0x0060 + (n) * 4)
++
++/* H6 R_CPUCFG registers (at R_CPUCFG base 0x07000400) */
++#define H6_POWERON_RST_REG(c)			(0x0040 + (c) * 4)
++#define H6_POWEROFF_GATING_REG(c)		(0x0044 + (c) * 4)
++#define H6_CPU_POWER_CLAMP_REG(c, n)		(0x0050 + (c) * 0x10 + (n) * 4)
++
++/* H6 AA64nAA32 bit position in CLS_CTRL_REG0 */
++#define H6_AA64nAA32_OFFSET			24
++
++/* H6 register bases */
++#define H6_CPUCFG_BASE				0x09010000
++#define H6_R_CPUCFG_BASE			0x07000400
++
+ #define PRCM_CPU_PWROFF_REG			0x100
+ #define PRCM_CPU_PWR_CLAMP_REG(cpu)		(((cpu) * 4) + 0x140)
+ 
+@@ -35,6 +57,8 @@ static void __iomem *cpucfg_membase;
+ static void __iomem *prcm_membase;
+ 
+ static DEFINE_SPINLOCK(cpu_lock);
++static void __iomem *h6_cpucfg_membase;
++static void __iomem *h6_r_cpucfg_membase;
+ 
+ static void __init sun6i_smp_prepare_cpus(unsigned int max_cpus)
+ {
+@@ -175,3 +199,135 @@ static const struct smp_operations sun8i_smp_ops __initconst = {
+ 	.smp_boot_secondary	= sun8i_smp_boot_secondary,
+ };
+ CPU_METHOD_OF_DECLARE(sun8i_a23_smp, "allwinner,sun8i-a23", &sun8i_smp_ops);
++
++/*
++ * H6 (sun50i) SMP support for AArch32 mode
++ *
++ * The H6 is a 64-bit capable SoC but can run entirely in 32-bit mode.
++ * This requires:
++ * 1. Setting AA64nAA32 bit to 0 (32-bit mode) for each CPU
++ * 2. Using RVBAR registers for the entry point (32-bit physical address)
++ * 3. Different power sequencing than older sunxi SoCs
++ */
++
++static void h6_cpu_power_clamp(unsigned int cpu, bool enable)
++{
++	u32 val = enable ? 0x00 : 0xff;
++	int i;
++
++	if (enable) {
++		/* Power enable sequence from Allwinner BSP */
++		writel(0xfe, h6_r_cpucfg_membase + H6_CPU_POWER_CLAMP_REG(0, cpu));
++		writel(0xf8, h6_r_cpucfg_membase + H6_CPU_POWER_CLAMP_REG(0, cpu));
++		writel(0xe0, h6_r_cpucfg_membase + H6_CPU_POWER_CLAMP_REG(0, cpu));
++		writel(0x80, h6_r_cpucfg_membase + H6_CPU_POWER_CLAMP_REG(0, cpu));
++		writel(0x00, h6_r_cpucfg_membase + H6_CPU_POWER_CLAMP_REG(0, cpu));
++		udelay(1);
++	} else {
++		writel(0xff, h6_r_cpucfg_membase + H6_CPU_POWER_CLAMP_REG(0, cpu));
++	}
++}
++
++static void __init sun50i_h6_smp_prepare_cpus(unsigned int max_cpus)
++{
++	/* Map CPUCFG registers */
++	h6_cpucfg_membase = ioremap(H6_CPUCFG_BASE, 0x200);
++	if (!h6_cpucfg_membase) {
++		pr_err("Couldn't map H6 CPUCFG registers\n");
++		return;
++	}
++
++	/* Map R_CPUCFG registers */
++	h6_r_cpucfg_membase = ioremap(H6_R_CPUCFG_BASE, 0x200);
++	if (!h6_r_cpucfg_membase) {
++		pr_err("Couldn't map H6 R_CPUCFG registers\n");
++		iounmap(h6_cpucfg_membase);
++		h6_cpucfg_membase = NULL;
++		return;
++	}
++
++	pr_info("H6 SMP: CPUCFG at %p, R_CPUCFG at %p\n",
++		h6_cpucfg_membase, h6_r_cpucfg_membase);
++}
++
++static int sun50i_h6_smp_boot_secondary(unsigned int cpu,
++					struct task_struct *idle)
++{
++	u32 reg;
++	phys_addr_t entry = __pa_symbol(secondary_startup);
++
++	if (!(h6_cpucfg_membase && h6_r_cpucfg_membase))
++		return -EFAULT;
++
++	pr_debug("H6 SMP: Booting CPU %d, entry point 0x%llx\n",
++		 cpu, (unsigned long long)entry);
++
++	spin_lock(&cpu_lock);
++
++	/* Step 1: Assert CPU core reset */
++	reg = readl(h6_cpucfg_membase + H6_CPUCFG_RST_CTRL_REG(0));
++	writel(reg & ~BIT(cpu), h6_cpucfg_membase + H6_CPUCFG_RST_CTRL_REG(0));
++
++	/* Step 2: Assert CPU power-on reset */
++	reg = readl(h6_r_cpucfg_membase + H6_POWERON_RST_REG(0));
++	writel(reg & ~BIT(cpu), h6_r_cpucfg_membase + H6_POWERON_RST_REG(0));
++
++	/* Step 3: Set CPU to start in AArch32 mode (clear AA64nAA32 bit) */
++	reg = readl(h6_cpucfg_membase + H6_CPUCFG_CLS_CTRL_REG0(0));
++	writel(reg & ~BIT(H6_AA64nAA32_OFFSET + cpu),
++	       h6_cpucfg_membase + H6_CPUCFG_CLS_CTRL_REG0(0));
++
++	/* Step 4: Set the entry point via RVBAR (32-bit address, high bits 0) */
++	writel(entry, h6_cpucfg_membase + H6_CPUCFG_RVBAR_LO_REG(cpu));
++	writel(0, h6_cpucfg_membase + H6_CPUCFG_RVBAR_HI_REG(cpu));
++
++	/* Ensure entry point is visible */
++	dsb(sy);
++	isb();
++
++	/* Step 5: Apply power to the CPU */
++	h6_cpu_power_clamp(cpu, true);
++
++	/* Step 6: Release the core output clamps */
++	reg = readl(h6_r_cpucfg_membase + H6_POWEROFF_GATING_REG(0));
++	writel(reg & ~BIT(cpu), h6_r_cpucfg_membase + H6_POWEROFF_GATING_REG(0));
++	udelay(1);
++
++	/* Step 7: Deassert CPU power-on reset */
++	reg = readl(h6_r_cpucfg_membase + H6_POWERON_RST_REG(0));
++	writel(reg | BIT(cpu), h6_r_cpucfg_membase + H6_POWERON_RST_REG(0));
++
++	/* Step 8: Deassert CPU core reset */
++	reg = readl(h6_cpucfg_membase + H6_CPUCFG_RST_CTRL_REG(0));
++	writel(reg | BIT(cpu), h6_cpucfg_membase + H6_CPUCFG_RST_CTRL_REG(0));
++
++	/* Step 9: Assert DBGPWRDUP */
++	reg = readl(h6_cpucfg_membase + H6_CPUCFG_DBG_REG0);
++	writel(reg | BIT(cpu), h6_cpucfg_membase + H6_CPUCFG_DBG_REG0);
++
++	spin_unlock(&cpu_lock);
++
++	return 0;
++}
++
++#ifdef CONFIG_HOTPLUG_CPU
++static void sun50i_h6_cpu_die(unsigned int cpu)
++{
++	/* For now, just WFI. Full hotplug support would need power-down. */
++	while (1)
++		cpu_do_idle();
++}
++
++static int sun50i_h6_cpu_kill(unsigned int cpu)
++{
++	/* Power down handled by sun50i_h6_cpu_die for now */
++	return 1;
++}
++#endif
++
++static const struct smp_operations sun50i_h6_smp_ops __initconst = {
++	.smp_prepare_cpus	= sun50i_h6_smp_prepare_cpus,
++	.smp_boot_secondary	= sun50i_h6_smp_boot_secondary,
++#ifdef CONFIG_HOTPLUG_CPU
++	.cpu_die		= sun50i_h6_cpu_die,
++	.cpu_kill		= sun50i_h6_cpu_kill,
++#endif
++};
++CPU_METHOD_OF_DECLARE(sun50i_h6_smp, "allwinner,sun50i-h6", &sun50i_h6_smp_ops);

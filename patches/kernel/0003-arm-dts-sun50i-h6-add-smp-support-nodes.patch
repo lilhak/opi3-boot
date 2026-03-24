@@ -1,0 +1,76 @@
+From: Nigel <nigelgbot@gmail.com>
+Subject: [PATCH] ARM: dts: sun50i-h6: Add SMP support nodes for AArch32
+
+Add the required nodes for direct SMP bringup on H6 in AArch32 mode:
+- CPU enable-method changed from "psci" to "allwinner,sun50i-h6"
+- Remove PSCI node (not available without TF-A)
+- Add cpucfg and r_cpucfg nodes for the SMP driver
+
+The H6's CPUCFG is at 0x09010000 and R_CPUCFG at 0x07000400.
+
+Signed-off-by: Nigel <nigelgbot@gmail.com>
+---
+This patch should be applied after porting the DTS from arm64 to arm.
+The build script handles the PSCI removal; this documents the full changes.
+
+Changes to sun50i-h6.dtsi:
+1. Remove the psci {} node
+2. Change cpu enable-method from "psci" to "allwinner,sun50i-h6"
+3. Add cpucfg and r_cpucfg nodes (optional - driver uses hardcoded addresses)
+
+Example DTS snippet after patching:
+
+	cpus {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		cpu0: cpu@0 {
+			compatible = "arm,cortex-a53";
+			device_type = "cpu";
+			reg = <0>;
+			enable-method = "allwinner,sun50i-h6";
+			clocks = <&ccu CLK_CPUX>;
+			clock-latency-ns = <244144>;
+			#cooling-cells = <2>;
+		};
+
+		cpu1: cpu@1 {
+			compatible = "arm,cortex-a53";
+			device_type = "cpu";
+			reg = <1>;
+			enable-method = "allwinner,sun50i-h6";
+			/* ... */
+		};
+
+		cpu2: cpu@2 {
+			compatible = "arm,cortex-a53";
+			device_type = "cpu";
+			reg = <2>;
+			enable-method = "allwinner,sun50i-h6";
+			/* ... */
+		};
+
+		cpu3: cpu@3 {
+			compatible = "arm,cortex-a53";
+			device_type = "cpu";
+			reg = <3>;
+			enable-method = "allwinner,sun50i-h6";
+			/* ... */
+		};
+	};
+
+	/* PSCI node REMOVED - no TF-A in AArch32-only boot */
+
+	soc {
+		/* ... existing nodes ... */
+
+		cpucfg: syscon@9010000 {
+			compatible = "allwinner,sun50i-h6-cpucfg", "syscon";
+			reg = <0x09010000 0x200>;
+		};
+
+		r_cpucfg: syscon@7000400 {
+			compatible = "allwinner,sun50i-h6-r-cpucfg", "syscon";
+			reg = <0x07000400 0x200>;
+		};
+	};

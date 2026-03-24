@@ -45,12 +45,12 @@ if [ -f "$DTS_ARM64_DIR/sun50i-h6.dtsi" ]; then
     # (same hardware, different compatible string for 32-bit kernel)
     sed -i 's/arm,armv8-timer/arm,armv7-timer/g' "$DTS_ARM_DIR/sun50i-h6.dtsi"
 
-    # Remove PSCI node (no TF-A = no PSCI provider, will fault if kernel tries it)
+    # Remove PSCI node (no TF-A = no PSCI provider)
     sed -i '/^\tpsci {/,/^\t};/d' "$DTS_ARM_DIR/sun50i-h6.dtsi"
-    # Remove enable-method = "psci" from CPU nodes (single-core boot without PSCI)
-    sed -i '/enable-method = "psci";/d' "$DTS_ARM_DIR/sun50i-h6.dtsi"
+    # Change enable-method from "psci" to "allwinner,sun50i-h6" for direct SMP
+    sed -i 's/enable-method = "psci";/enable-method = "allwinner,sun50i-h6";/g' "$DTS_ARM_DIR/sun50i-h6.dtsi"
 
-    echo "  Copied and patched sun50i-h6.dtsi (timer, PSCI removed)"
+    echo "  Copied and patched sun50i-h6.dtsi (timer, SMP enable-method)"
 else
     echo "ERROR: sun50i-h6.dtsi not found in $DTS_ARM64_DIR"
     exit 1

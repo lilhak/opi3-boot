@@ -109,6 +109,151 @@ else
     echo "  Cortex-A53 CPU ID already present or proc-v7.S not found"
 fi
 
+# --- Patch: Add H6 SMP support to platsmp.c ---
+PLATSMP="arch/arm/mach-sunxi/platsmp.c"
+if [ -f "$PLATSMP" ] && ! grep -q "sun50i_h6_smp" "$PLATSMP"; then
+    echo "Adding H6 SMP support to platsmp.c..."
+    cat >> "$PLATSMP" << 'H6SMP'
+
+/*
+ * H6 (sun50i) SMP support for AArch32 mode
+ *
+ * The H6 is a 64-bit capable SoC but can run entirely in 32-bit mode.
+ * This requires:
+ * 1. Setting AA64nAA32 bit to 0 (32-bit mode) for each CPU
+ * 2. Using RVBAR registers for the entry point (32-bit physical address)
+ * 3. Different power sequencing than older sunxi SoCs
+ *
+ * Register bases (from TF-A sun50i_h6):
+ * - CPUCFG: 0x09010000
+ * - R_CPUCFG: 0x07000400
+ */
+
+/* H6 CPUCFG registers */
+#define H6_CPUCFG_BASE                  0x09010000
+#define H6_R_CPUCFG_BASE                0x07000400
+
+#define H6_CPUCFG_RST_CTRL_REG(c)       (0x0000 + (c) * 4)
+#define H6_CPUCFG_CLS_CTRL_REG0(c)      (0x0010 + (c) * 0x10)
+#define H6_CPUCFG_RVBAR_LO_REG(n)       (0x0040 + (n) * 8)
+#define H6_CPUCFG_RVBAR_HI_REG(n)       (0x0044 + (n) * 8)
+#define H6_CPUCFG_DBG_REG0              0x00c0
+
+#define H6_POWERON_RST_REG(c)           (0x0040 + (c) * 4)
+#define H6_POWEROFF_GATING_REG(c)       (0x0044 + (c) * 4)
+#define H6_CPU_POWER_CLAMP_REG(c, n)    (0x0050 + (c) * 0x10 + (n) * 4)
+
+#define H6_AA64nAA32_OFFSET             24
+
+static void __iomem *h6_cpucfg_membase;
+static void __iomem *h6_r_cpucfg_membase;
+
+static void h6_cpu_power_clamp(unsigned int cpu, bool enable)
+{
+    if (enable) {
+        /* Power enable sequence from Allwinner BSP / TF-A */
+        writel(0xfe, h6_r_cpucfg_membase + H6_CPU_POWER_CLAMP_REG(0, cpu));
+        writel(0xf8, h6_r_cpucfg_membase + H6_CPU_POWER_CLAMP_REG(0, cpu));
+        writel(0xe0, h6_r_cpucfg_membase + H6_CPU_POWER_CLAMP_REG(0, cpu));
+        writel(0x80, h6_r_cpucfg_membase + H6_CPU_POWER_CLAMP_REG(0, cpu));
+        writel(0x00, h6_r_cpucfg_membase + H6_CPU_POWER_CLAMP_REG(0, cpu));
+        udelay(1);
+    } else {
+        writel(0xff, h6_r_cpucfg_membase + H6_CPU_POWER_CLAMP_REG(0, cpu));
+    }
+}
+
+static void __init sun50i_h6_smp_prepare_cpus(unsigned int max_cpus)
+{
+    h6_cpucfg_membase = ioremap(H6_CPUCFG_BASE, 0x200);
+    if (!h6_cpucfg_membase) {
+        pr_err("H6 SMP: Couldn't map CPUCFG registers\n");
+        return;
+    }
+
+    h6_r_cpucfg_membase = ioremap(H6_R_CPUCFG_BASE, 0x200);
+    if (!h6_r_cpucfg_membase) {
+        pr_err("H6 SMP: Couldn't map R_CPUCFG registers\n");
+        iounmap(h6_cpucfg_membase);
+        h6_cpucfg_membase = NULL;
+        return;
+    }
+
+    pr_info("H6 SMP: CPUCFG at %p, R_CPUCFG at %p\n",
+            h6_cpucfg_membase, h6_r_cpucfg_membase);
+}
+
+static int sun50i_h6_smp_boot_secondary(unsigned int cpu,
+                                        struct task_struct *idle)
+{
+    u32 reg;
+    phys_addr_t entry = __pa_symbol(secondary_startup);
+
+    if (!(h6_cpucfg_membase && h6_r_cpucfg_membase))
+        return -EFAULT;
+
+    pr_debug("H6 SMP: Booting CPU %d, entry point 0x%llx\n",
+             cpu, (unsigned long long)entry);
+
+    spin_lock(&cpu_lock);
+
+    /* Step 1: Assert CPU core reset */
+    reg = readl(h6_cpucfg_membase + H6_CPUCFG_RST_CTRL_REG(0));
+    writel(reg & ~BIT(cpu), h6_cpucfg_membase + H6_CPUCFG_RST_CTRL_REG(0));
+
+    /* Step 2: Assert CPU power-on reset */
+    reg = readl(h6_r_cpucfg_membase + H6_POWERON_RST_REG(0));
+    writel(reg & ~BIT(cpu), h6_r_cpucfg_membase + H6_POWERON_RST_REG(0));
+
+    /* Step 3: Set CPU to start in AArch32 mode (clear AA64nAA32 bit) */
+    reg = readl(h6_cpucfg_membase + H6_CPUCFG_CLS_CTRL_REG0(0));
+    writel(reg & ~BIT(H6_AA64nAA32_OFFSET + cpu),
+           h6_cpucfg_membase + H6_CPUCFG_CLS_CTRL_REG0(0));
+
+    /* Step 4: Set the entry point via RVBAR (32-bit address, high bits 0) */
+    writel(entry, h6_cpucfg_membase + H6_CPUCFG_RVBAR_LO_REG(cpu));
+    writel(0, h6_cpucfg_membase + H6_CPUCFG_RVBAR_HI_REG(cpu));
+
+    /* Ensure entry point is visible */
+    dsb(sy);
+    isb();
+
+    /* Step 5: Apply power to the CPU */
+    h6_cpu_power_clamp(cpu, true);
+
+    /* Step 6: Release the core output clamps */
+    reg = readl(h6_r_cpucfg_membase + H6_POWEROFF_GATING_REG(0));
+    writel(reg & ~BIT(cpu), h6_r_cpucfg_membase + H6_POWEROFF_GATING_REG(0));
+    udelay(1);
+
+    /* Step 7: Deassert CPU power-on reset */
+    reg = readl(h6_r_cpucfg_membase + H6_POWERON_RST_REG(0));
+    writel(reg | BIT(cpu), h6_r_cpucfg_membase + H6_POWERON_RST_REG(0));
+
+    /* Step 8: Deassert CPU core reset */
+    reg = readl(h6_cpucfg_membase + H6_CPUCFG_RST_CTRL_REG(0));
+    writel(reg | BIT(cpu), h6_cpucfg_membase + H6_CPUCFG_RST_CTRL_REG(0));
+
+    /* Step 9: Assert DBGPWRDUP */
+    reg = readl(h6_cpucfg_membase + H6_CPUCFG_DBG_REG0);
+    writel(reg | BIT(cpu), h6_cpucfg_membase + H6_CPUCFG_DBG_REG0);
+
+    spin_unlock(&cpu_lock);
+
+    return 0;
+}
+
+static const struct smp_operations sun50i_h6_smp_ops __initconst = {
+    .smp_prepare_cpus       = sun50i_h6_smp_prepare_cpus,
+    .smp_boot_secondary     = sun50i_h6_smp_boot_secondary,
+};
+CPU_METHOD_OF_DECLARE(sun50i_h6_smp, "allwinner,sun50i-h6", &sun50i_h6_smp_ops);
+H6SMP
+    echo "  Added H6 SMP support (direct CPU bringup via CPUCFG registers)"
+else
+    echo "  H6 SMP support already present in platsmp.c"
+fi
+
 # --- Patch: Port H6 DTS from arm64 to arm ---
 DTS_ARM_DIR="arch/arm/boot/dts/allwinner"
 DTS_ARM64_DIR="arch/arm64/boot/dts/allwinner"
@@ -126,12 +271,12 @@ done
 sed -i 's/arm,armv8-timer/arm,armv7-timer/g' "$DTS_ARM_DIR/sun50i-h6.dtsi"
 echo "  Patched timer: armv8-timer -> armv7-timer"
 
-# --- PATCH 2: Remove PSCI node and cpu enable-method (no TF-A = no PSCI) ---
-# Remove the psci node entirely
+# --- PATCH 2: Remove PSCI node, set SMP enable-method ---
+# Remove the psci node entirely (no TF-A = no PSCI provider)
 sed -i '/^\tpsci {/,/^\t};/d' "$DTS_ARM_DIR/sun50i-h6.dtsi"
-# Remove enable-method = "psci" from CPU nodes (kernel will use default single-core boot)
-sed -i '/enable-method = "psci";/d' "$DTS_ARM_DIR/sun50i-h6.dtsi"
-echo "  Removed PSCI node and cpu enable-method (no TF-A)"
+# Change enable-method from "psci" to "allwinner,sun50i-h6" for direct SMP bringup
+sed -i 's/enable-method = "psci";/enable-method = "allwinner,sun50i-h6";/g' "$DTS_ARM_DIR/sun50i-h6.dtsi"
+echo "  Removed PSCI node, set enable-method to allwinner,sun50i-h6 for SMP"
 
 # Add to DTS Makefile
 DTS_MF="$DTS_ARM_DIR/Makefile"
