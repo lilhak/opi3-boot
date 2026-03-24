@@ -48,9 +48,19 @@ setenv bootargs earlycon=uart8250,mmio32,0x05000000 ignore_loglevel keep_bootcon
 ```
 Remove regular console entirely, rely only on earlycon.
 
+## CRITICAL UPDATE (2026-03-24 04:08 AM)
+
+Ralph tried the bootargs but used `mmio` instead of `mmio32` in earlycon:
+- Used: `earlycon=uart8250,mmio,0x05000000` ❌
+- Should be: `earlycon=uart8250,mmio32,0x05000000` ✅
+
+Result: Boot output reduced to single '[' character - complete early console failure.
+
+**ROOT CAUSE:** `mmio` parameter doesn't work on ARM32 systems. Must use `mmio32` for 32-bit register access.
+
 ## Recommendation for Ralph
 
-**Try Option 1 first** (remove keep_bootcon + earlyprintk):
+**EXACT bootargs to use** (mmio32 is critical):
 ```bash
 setenv bootargs console=ttyS0,115200 earlycon=uart8250,mmio32,0x05000000 ignore_loglevel root=/dev/mmcblk0p1 rootwait rw panic=10 loglevel=8
 load mmc 0:1 0x42000000 /boot/zImage

@@ -1,0 +1,34 @@
+Ralph Email Check - 2026-03-24 04:08 AM
+
+NEW EMAIL THREAD: 19d1f30f1a1be247
+Subject: testing revised bootargs
+Date: 2026-03-24 20:34:52 +1100 (Tue, Mar 24 02:34 PST)
+
+CRITICAL ISSUE FOUND:
+Ralph used: earlycon=uart8250,mmio,0x05000000
+Should be: earlycon=uart8250,mmio32,0x05000000
+
+SYMPTOMS:
+- Boot output reduced to single '[' character
+- Complete early console failure
+- Kernel not getting past very early initialization
+
+ROOT CAUSE:
+- mmio parameter doesn't work on ARM32 systems
+- mmio32 is required for 32-bit register access
+- This explains the minimal output
+
+FIX SENT:
+- Replied with correct bootargs using mmio32
+- Removed keep_bootcon and earlyprintk per previous analysis
+- Should restore working early console + fix handoff issue
+
+REPLY THREAD: 19d1f88e5567f128
+
+UPDATED KNOWN THREAD IDS:
+- 19d1f1b160f5348b (original)
+- 19d1ef968e53dd40 (known)
+- 19d1e50e9eca2abc (known)  
+- 19d1f2573faab421 (known)
+- 19d1f30f1a1be247 (NEW - Ralph's mmio test)
+- 19d1f88e5567f128 (NEW - Our mmio32 fix reply)
