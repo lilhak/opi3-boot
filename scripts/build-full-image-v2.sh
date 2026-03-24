@@ -211,7 +211,7 @@ cat "$ROOTFS/etc/inittab.serial" >> "$ROOTFS/etc/inittab"
 # Create fstab
 cat > "$ROOTFS/etc/fstab" << 'EOF'
 # /etc/fstab: static file system information.
-/dev/mmcblk1p1  /       ext4    defaults,noatime        0       1
+LABEL=rootfs    /       ext4    defaults,noatime        0       1
 tmpfs           /tmp    tmpfs   defaults                0       0
 EOF
 
@@ -241,9 +241,9 @@ cp "$WORK/output/"*.dtb "$ROOTFS/boot/" 2>/dev/null || true
 
 # Create boot.scr source
 cat > "$ROOTFS/boot/boot.cmd" << 'EOF'
-setenv bootargs console=ttyS0,115200 root=/dev/mmcblk1p1 rootwait rw panic=10
-load mmc 1:1 0x42000000 /boot/zImage
-load mmc 1:1 0x44000000 /boot/sun50i-h6-orangepi-3.dtb
+setenv bootargs console=ttyS0,115200 earlycon=uart8250,mmio32,0x05000000 root=LABEL=rootfs rootwait rw panic=10
+load mmc 0:1 0x42000000 /boot/zImage || load mmc 1:1 0x42000000 /boot/zImage
+load mmc 0:1 0x44000000 /boot/sun50i-h6-orangepi-3.dtb || load mmc 1:1 0x44000000 /boot/sun50i-h6-orangepi-3.dtb
 bootz 0x42000000 - 0x44000000
 EOF
 

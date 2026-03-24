@@ -117,7 +117,7 @@ CONFIG_DEFAULT_DEVICE_TREE="sun50i-h6-orangepi-3"
 CONFIG_BOOTDELAY=3
 CONFIG_AUTOBOOT=y
 CONFIG_USE_BOOTCOMMAND=y
-CONFIG_BOOTCOMMAND="load mmc 0:1 0x42000000 /boot/boot.scr; source 0x42000000"
+CONFIG_BOOTCOMMAND="if load mmc 0:1 0x42000000 /boot/boot.scr; then source 0x42000000; else load mmc 1:1 0x42000000 /boot/boot.scr; source 0x42000000; fi"
 # MMC support
 CONFIG_MMC=y
 CONFIG_MMC_SUNXI=y

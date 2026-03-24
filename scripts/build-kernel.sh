@@ -33,8 +33,10 @@ echo "Applying config overrides..."
 ./scripts/config --enable CONFIG_STMMAC_ETH
 ./scripts/config --enable CONFIG_PHY_SUN50I_USB3
 ./scripts/config --enable CONFIG_SERIAL_8250
+./scripts/config --enable CONFIG_SERIAL_8250_OF
 ./scripts/config --enable CONFIG_SERIAL_8250_DW
 ./scripts/config --enable CONFIG_SERIAL_8250_CONSOLE
+./scripts/config --enable CONFIG_SERIAL_EARLYCON
 ./scripts/config --enable CONFIG_USB_EHCI_HCD
 ./scripts/config --enable CONFIG_USB_OHCI_HCD
 ./scripts/config --enable CONFIG_USB_STORAGE

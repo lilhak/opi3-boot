@@ -197,8 +197,10 @@ echo "Applying H6 config overrides..."
 
 # Serial console (DesignWare 8250 UART)
 ./scripts/config --enable CONFIG_SERIAL_8250
+./scripts/config --enable CONFIG_SERIAL_8250_OF
 ./scripts/config --enable CONFIG_SERIAL_8250_DW
 ./scripts/config --enable CONFIG_SERIAL_8250_CONSOLE
+./scripts/config --enable CONFIG_SERIAL_EARLYCON
 
 # Device hotplug
 ./scripts/config --enable CONFIG_DEVTMPFS

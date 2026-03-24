@@ -81,9 +81,13 @@ fi
 BOOT_SCR="$WORK/output/boot-arm32.scr"
 echo "Generating 32-bit boot.scr..."
 cat > "$WORK/output/boot-arm32.cmd" << BOOTCMD
-setenv bootargs console=ttyS0,115200 root=/dev/mmcblk0p1 rootfstype=ext4 rootwait rw panic=10 loglevel=7
-load mmc 0:1 0x42000000 /boot/zImage
-load mmc 0:1 0x44000000 /boot/$DTB_NAME
+setenv bootargs console=ttyS0,115200 earlycon=uart8250,mmio32,0x05000000 root=LABEL=rootfs rootfstype=ext4 rootwait rw panic=10 loglevel=7
+if load mmc 0:1 0x42000000 /boot/zImage; then
+  load mmc 0:1 0x44000000 /boot/$DTB_NAME
+else
+  load mmc 1:1 0x42000000 /boot/zImage
+  load mmc 1:1 0x44000000 /boot/$DTB_NAME
+fi
 bootz 0x42000000 - 0x44000000
 BOOTCMD
 mkimage -C none -A arm -T script -d "$WORK/output/boot-arm32.cmd" "$BOOT_SCR"

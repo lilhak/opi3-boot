@@ -205,7 +205,7 @@ EOF
 
 # fstab
 cat > "$WORK/rootfs/etc/fstab" << 'EOF'
-/dev/mmcblk1p1  /         ext4  defaults,noatime  0  1
+LABEL=rootfs    /         ext4  defaults,noatime  0  1
 tmpfs           /tmp      tmpfs defaults          0  0
 proc            /proc     proc  defaults          0  0
 sysfs           /sys      sysfs defaults          0  0
@@ -276,11 +276,11 @@ echo ">>> STEP 5: Creating boot.scr..."
 # Note: MMC1 is the external SD on OPi3 LTS
 # Try mmc 1 first (external SD), fallback to mmc 0
 cat > "$WORK/output/boot.cmd" << 'BOOTCMD'
-setenv bootargs console=ttyS0,115200 root=/dev/mmcblk1p1 rootfstype=ext4 rootwait rw panic=10 loglevel=7
+setenv bootargs console=ttyS0,115200 earlycon=uart8250,mmio32,0x05000000 root=LABEL=rootfs rootfstype=ext4 rootwait rw panic=10 loglevel=7
 echo "Loading kernel..."
-load mmc 1:1 0x42000000 /boot/zImage || load mmc 0:1 0x42000000 /boot/zImage
+load mmc 0:1 0x42000000 /boot/zImage || load mmc 1:1 0x42000000 /boot/zImage
 echo "Loading device tree..."
-load mmc 1:1 0x44000000 /boot/sun50i-h6-orangepi-3.dtb || load mmc 0:1 0x44000000 /boot/sun50i-h6-orangepi-3.dtb
+load mmc 0:1 0x44000000 /boot/sun50i-h6-orangepi-3.dtb || load mmc 1:1 0x44000000 /boot/sun50i-h6-orangepi-3.dtb
 echo "Booting 32-bit kernel..."
 bootz 0x42000000 - 0x44000000
 BOOTCMD

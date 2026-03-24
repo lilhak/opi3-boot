@@ -13,7 +13,7 @@ EOF
 
 # --- fstab ---
 cat > /etc/fstab << 'EOF'
-/dev/mmcblk0p1  /         ext4    defaults,noatime  0  1
+LABEL=rootfs    /         ext4    defaults,noatime  0  1
 tmpfs           /tmp      tmpfs   defaults          0  0
 proc            /proc     proc    defaults          0  0
 sysfs           /sys      sysfs   defaults          0  0

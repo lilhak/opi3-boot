@@ -47,9 +47,13 @@ echo ">>> Step 5/5: Generating boot.scr..."
 DTB_NAME=$(cat "$WORK/output/dtb-name.txt" 2>/dev/null || echo "sun50i-h6-orangepi-3.dtb")
 
 cat > "$WORK/output/boot.cmd" << BOOTCMD
-setenv bootargs console=ttyS0,115200 root=/dev/mmcblk0p1 rootfstype=ext4 rootwait rw panic=10 loglevel=7
-load mmc 0:1 \${kernel_addr_r} /boot/Image
-load mmc 0:1 \${fdt_addr_r} /boot/allwinner/$DTB_NAME
+setenv bootargs console=ttyS0,115200 earlycon=uart8250,mmio32,0x05000000 root=LABEL=rootfs rootfstype=ext4 rootwait rw panic=10 loglevel=7
+if load mmc 0:1 \${kernel_addr_r} /boot/Image; then
+  load mmc 0:1 \${fdt_addr_r} /boot/allwinner/$DTB_NAME
+else
+  load mmc 1:1 \${kernel_addr_r} /boot/Image
+  load mmc 1:1 \${fdt_addr_r} /boot/allwinner/$DTB_NAME
+fi
 booti \${kernel_addr_r} - \${fdt_addr_r}
 BOOTCMD
 
