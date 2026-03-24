@@ -426,7 +426,7 @@ cp "$WORK/output/"*.dtb "$ROOTFS/boot/" 2>/dev/null || true
 # Create boot.scr source
 cat > "$ROOTFS/boot/boot.cmd" << 'EOF'
 echo "=== OPi3 boot.scr running ==="
-setenv bootargs console=ttyS0,115200 earlycon=uart8250,mmio32,0x05000000 earlyprintk=ttyS0,115200 ignore_loglevel root=LABEL=rootfs rootfstype=ext4 rootwait rw panic=10 loglevel=8
+setenv bootargs console=ttyS0,115200 earlycon=uart8250,mmio32,0x05000000 ignore_loglevel root=LABEL=rootfs rootfstype=ext4 rootwait rw panic=10 loglevel=8
 load mmc 0:1 0x42000000 /boot/zImage || load mmc 1:1 0x42000000 /boot/zImage
 load mmc 0:1 0x44000000 /boot/sun50i-h6-orangepi-3.dtb || load mmc 1:1 0x44000000 /boot/sun50i-h6-orangepi-3.dtb
 bootz 0x42000000 - 0x44000000
@@ -441,6 +441,21 @@ cat > "$ROOTFS/boot/uEnv.txt" << 'EOF'
 bootargs=console=ttyS0,115200 earlycon=uart8250,mmio32,0x05000000 earlyprintk=ttyS0,115200 ignore_loglevel root=LABEL=rootfs rootfstype=ext4 rootwait rw panic=10 loglevel=8
 EOF
 cp "$ROOTFS/boot/uEnv.txt" "$ROOTFS/uEnv.txt"
+
+# Create an ALTERNATIVE boot command without keep_bootcon (for console handoff fix)
+cat > "$ROOTFS/boot/boot-clean-handoff.cmd" << 'EOF'
+echo "=== OPi3 boot.scr running (clean console handoff) ==="
+setenv bootargs console=ttyS0,115200 earlycon=uart8250,mmio32,0x05000000 ignore_loglevel root=LABEL=rootfs rootfstype=ext4 rootwait rw panic=10 loglevel=8
+load mmc 0:1 0x42000000 /boot/zImage || load mmc 1:1 0x42000000 /boot/zImage
+load mmc 0:1 0x44000000 /boot/sun50i-h6-orangepi-3.dtb || load mmc 1:1 0x44000000 /boot/sun50i-h6-orangepi-3.dtb
+bootz 0x42000000 - 0x44000000
+EOF
+mkimage -C none -A arm -T script -d "$ROOTFS/boot/boot-clean-handoff.cmd" "$ROOTFS/boot/boot-clean-handoff.scr"
+
+# Also create alternate uEnv.txt (without keep_bootcon and earlyprintk)
+cat > "$ROOTFS/boot/uEnv-clean-handoff.txt" << 'EOF'
+bootargs=console=ttyS0,115200 earlycon=uart8250,mmio32,0x05000000 ignore_loglevel root=LABEL=rootfs rootfstype=ext4 rootwait rw panic=10 loglevel=8
+EOF
 
 echo "Rootfs configuration complete."
 
