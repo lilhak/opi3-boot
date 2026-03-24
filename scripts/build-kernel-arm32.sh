@@ -45,7 +45,12 @@ if [ -f "$DTS_ARM64_DIR/sun50i-h6.dtsi" ]; then
     # (same hardware, different compatible string for 32-bit kernel)
     sed -i 's/arm,armv8-timer/arm,armv7-timer/g' "$DTS_ARM_DIR/sun50i-h6.dtsi"
 
-    echo "  Copied and patched sun50i-h6.dtsi"
+    # Remove PSCI node (no TF-A = no PSCI provider, will fault if kernel tries it)
+    sed -i '/^\tpsci {/,/^\t};/d' "$DTS_ARM_DIR/sun50i-h6.dtsi"
+    # Remove enable-method = "psci" from CPU nodes (single-core boot without PSCI)
+    sed -i '/enable-method = "psci";/d' "$DTS_ARM_DIR/sun50i-h6.dtsi"
+
+    echo "  Copied and patched sun50i-h6.dtsi (timer, PSCI removed)"
 else
     echo "ERROR: sun50i-h6.dtsi not found in $DTS_ARM64_DIR"
     exit 1
@@ -180,6 +185,15 @@ echo "Applying H6 config overrides..."
 ./scripts/config --enable CONFIG_MACH_SUN50I
 ./scripts/config --enable CONFIG_SMP
 ./scripts/config --set-val CONFIG_NR_CPUS 4
+
+# Low-level debug: H6 UART0 at 0x05000000 (DesignWare 8250)
+./scripts/config --enable CONFIG_DEBUG_LL
+./scripts/config --enable CONFIG_DEBUG_UART_8250
+./scripts/config --set-val CONFIG_DEBUG_UART_8250_SHIFT 2
+./scripts/config --set-val CONFIG_DEBUG_UART_PHYS 0x05000000
+./scripts/config --set-val CONFIG_DEBUG_UART_VIRT 0xf5000000
+./scripts/config --set-str CONFIG_DEBUG_LL_INCLUDE "debug/8250.S"
+./scripts/config --enable CONFIG_EARLY_PRINTK
 
 # Clock controller (H6-specific, but driver is architecture-neutral)
 ./scripts/config --enable CONFIG_SUN50I_H6_CCU

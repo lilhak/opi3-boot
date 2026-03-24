@@ -41,6 +41,9 @@ CONFIG_MACH_SUN50I=y
 CONFIG_SUN50I_DE2_BUS=y
 CONFIG_SUNXI_WATCHDOG=y
 CONFIG_SERIAL_8250_DW=y
+CONFIG_SERIAL_8250_OF=y
+CONFIG_SERIAL_8250_CONSOLE=y
+CONFIG_SERIAL_EARLYCON=y
 CONFIG_MMC_SUNXI=y
 CONFIG_USB_EHCI_HCD_PLATFORM=y
 CONFIG_USB_OHCI_HCD_PLATFORM=y
@@ -60,6 +63,14 @@ CONFIG_PINCTRL_SUN50I_H6_R=y
 CONFIG_GPIO_SYSFS=y
 CONFIG_DEVTMPFS=y
 CONFIG_DEVTMPFS_MOUNT=y
+# --- Low-level debug: H6 UART0 at 0x05000000 (DesignWare 8250) ---
+CONFIG_DEBUG_LL=y
+CONFIG_DEBUG_UART_8250=y
+CONFIG_DEBUG_UART_8250_SHIFT=2
+CONFIG_DEBUG_UART_PHYS=0x05000000
+CONFIG_DEBUG_UART_VIRT=0xf5000000
+CONFIG_DEBUG_LL_INCLUDE="debug/8250.S"
+CONFIG_EARLY_PRINTK=y
 EOF
 
 make ARCH=arm CROSS_COMPILE=$CROSS olddefconfig
@@ -103,20 +114,31 @@ DTS_ARM_DIR="arch/arm/boot/dts/allwinner"
 DTS_ARM64_DIR="arch/arm64/boot/dts/allwinner"
 mkdir -p "$DTS_ARM_DIR"
 
-if [ -f "$DTS_ARM64_DIR/sun50i-h6.dtsi" ] && [ ! -f "$DTS_ARM_DIR/sun50i-h6.dtsi" ]; then
-    echo "Porting H6 device tree from arm64 to arm..."
-    cp "$DTS_ARM64_DIR/sun50i-h6.dtsi" "$DTS_ARM_DIR/"
-    sed -i 's/arm,armv8-timer/arm,armv7-timer/g' "$DTS_ARM_DIR/sun50i-h6.dtsi"
-    for f in sun50i-h6-orangepi-3.dts sun50i-h6-orangepi-3-lts.dts sun50i-h6-cpu-opp.dtsi sun50i-h6-gpu-opp.dtsi sunxi-h6-gpio.dtsi; do
-        [ -f "$DTS_ARM64_DIR/$f" ] && cp "$DTS_ARM64_DIR/$f" "$DTS_ARM_DIR/"
-    done
-    # Add to DTS Makefile
-    DTS_MF="$DTS_ARM_DIR/Makefile"
-    if [ -f "$DTS_MF" ] && ! grep -q "sun50i-h6-orangepi-3" "$DTS_MF"; then
-        echo 'dtb-$(CONFIG_MACH_SUN50I) += sun50i-h6-orangepi-3.dtb' >> "$DTS_MF"
-    fi
-    echo "  DTS ported."
+# Always re-port the DTS to ensure patches are applied (remove stale copies first)
+echo "Porting H6 device tree from arm64 to arm..."
+rm -f "$DTS_ARM_DIR"/sun50i-h6*.dts "$DTS_ARM_DIR"/sun50i-h6*.dtsi "$DTS_ARM_DIR"/sunxi-h6-gpio.dtsi 2>/dev/null
+cp "$DTS_ARM64_DIR/sun50i-h6.dtsi" "$DTS_ARM_DIR/"
+for f in sun50i-h6-orangepi-3.dts sun50i-h6-orangepi-3-lts.dts sun50i-h6-cpu-opp.dtsi sun50i-h6-gpu-opp.dtsi sunxi-h6-gpio.dtsi; do
+    [ -f "$DTS_ARM64_DIR/$f" ] && cp "$DTS_ARM64_DIR/$f" "$DTS_ARM_DIR/"
+done
+
+# --- PATCH 1: armv8-timer -> armv7-timer (32-bit kernel needs this) ---
+sed -i 's/arm,armv8-timer/arm,armv7-timer/g' "$DTS_ARM_DIR/sun50i-h6.dtsi"
+echo "  Patched timer: armv8-timer -> armv7-timer"
+
+# --- PATCH 2: Remove PSCI node and cpu enable-method (no TF-A = no PSCI) ---
+# Remove the psci node entirely
+sed -i '/^\tpsci {/,/^\t};/d' "$DTS_ARM_DIR/sun50i-h6.dtsi"
+# Remove enable-method = "psci" from CPU nodes (kernel will use default single-core boot)
+sed -i '/enable-method = "psci";/d' "$DTS_ARM_DIR/sun50i-h6.dtsi"
+echo "  Removed PSCI node and cpu enable-method (no TF-A)"
+
+# Add to DTS Makefile
+DTS_MF="$DTS_ARM_DIR/Makefile"
+if [ -f "$DTS_MF" ] && ! grep -q "sun50i-h6-orangepi-3" "$DTS_MF"; then
+    echo 'dtb-$(CONFIG_MACH_SUN50I) += sun50i-h6-orangepi-3.dtb' >> "$DTS_MF"
 fi
+echo "  DTS ported and patched."
 
 # --- Patch: Add H6 to mach-sunxi ---
 SUNXI_C="arch/arm/mach-sunxi/sunxi.c"
@@ -150,19 +172,26 @@ cp arch/arm/boot/zImage "$WORK/output/"
 echo "Kernel build complete."
 ls -la "$WORK/output/zImage"
 
-# Try to find or create H6 DTB
+# Find the H6 DTB - MUST come from the patched arm32 tree, never arm64
 echo "Looking for H6 DTB..."
-find arch/arm/boot/dts -name "*h6*" -o -name "*orangepi*3*" 2>/dev/null | head -5 || true
+find arch/arm/boot/dts -name "*h6*orangepi*" 2>/dev/null | head -5 || true
 
-# If no H6 DTB was built (expected since H6 is arm64-only in mainline),
-# copy the arm64 one and hope the kernel can parse it
-if [ -f arch/arm64/boot/dts/allwinner/sun50i-h6-orangepi-3.dtb ]; then
-    echo "Using arm64 DTB (may work with 32-bit kernel)"
-    cp arch/arm64/boot/dts/allwinner/sun50i-h6-orangepi-3.dtb "$WORK/output/"
-elif [ -f /build/output/sun50i-h6-orangepi-3.dtb ]; then
-    echo "Using pre-built DTB from previous run"
+DTB_ARM32="arch/arm/boot/dts/allwinner/sun50i-h6-orangepi-3.dtb"
+if [ -f "$DTB_ARM32" ]; then
+    echo "Using arm32 DTB (correctly patched with armv7-timer, no PSCI)"
+    cp "$DTB_ARM32" "$WORK/output/"
 else
-    echo "WARNING: No H6 DTB found. Will need to build separately."
+    echo "ERROR: arm32 DTB not built! CONFIG_MACH_SUN50I may not be enabled."
+    echo "Attempting manual DTB compilation..."
+    make ARCH=arm CROSS_COMPILE=$CROSS allwinner/sun50i-h6-orangepi-3.dtb || true
+    if [ -f "$DTB_ARM32" ]; then
+        cp "$DTB_ARM32" "$WORK/output/"
+        echo "Manual DTB build succeeded."
+    else
+        echo "FATAL: Cannot build arm32 DTB. Check Kconfig for MACH_SUN50I."
+        echo "DO NOT fall back to arm64 DTB - it has armv8-timer and PSCI which will hang the 32-bit kernel."
+        exit 1
+    fi
 fi
 
 # ============================================
@@ -241,7 +270,7 @@ cp "$WORK/output/"*.dtb "$ROOTFS/boot/" 2>/dev/null || true
 
 # Create boot.scr source
 cat > "$ROOTFS/boot/boot.cmd" << 'EOF'
-setenv bootargs console=ttyS0,115200 earlycon=uart8250,mmio32,0x05000000 root=LABEL=rootfs rootwait rw panic=10
+setenv bootargs console=ttyS0,115200 earlycon=uart8250,mmio32,0x05000000 earlyprintk root=LABEL=rootfs rootfstype=ext4 rootwait rw panic=10 loglevel=8
 load mmc 0:1 0x42000000 /boot/zImage || load mmc 1:1 0x42000000 /boot/zImage
 load mmc 0:1 0x44000000 /boot/sun50i-h6-orangepi-3.dtb || load mmc 1:1 0x44000000 /boot/sun50i-h6-orangepi-3.dtb
 bootz 0x42000000 - 0x44000000
