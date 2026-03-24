@@ -426,7 +426,7 @@ cp "$WORK/output/"*.dtb "$ROOTFS/boot/" 2>/dev/null || true
 # Create boot.scr source
 cat > "$ROOTFS/boot/boot.cmd" << 'EOF'
 echo "=== OPi3 boot.scr running ==="
-setenv bootargs console=ttyS0,115200 earlycon=uart8250,mmio32,0x05000000 earlyprintk ignore_loglevel root=LABEL=rootfs rootfstype=ext4 rootwait rw panic=10 loglevel=8
+setenv bootargs console=ttyS0,115200 earlycon=uart8250,mmio32,0x05000000 earlyprintk=ttyS0,115200 ignore_loglevel root=LABEL=rootfs rootfstype=ext4 rootwait rw panic=10 loglevel=8
 load mmc 0:1 0x42000000 /boot/zImage || load mmc 1:1 0x42000000 /boot/zImage
 load mmc 0:1 0x44000000 /boot/sun50i-h6-orangepi-3.dtb || load mmc 1:1 0x44000000 /boot/sun50i-h6-orangepi-3.dtb
 bootz 0x42000000 - 0x44000000
@@ -438,7 +438,7 @@ cp "$ROOTFS/boot/boot.scr" "$ROOTFS/boot.scr"
 
 # Also create uEnv.txt as fallback for U-Boot configs that read it
 cat > "$ROOTFS/boot/uEnv.txt" << 'EOF'
-bootargs=console=ttyS0,115200 earlycon=uart8250,mmio32,0x05000000 earlyprintk ignore_loglevel root=LABEL=rootfs rootfstype=ext4 rootwait rw panic=10 loglevel=8
+bootargs=console=ttyS0,115200 earlycon=uart8250,mmio32,0x05000000 earlyprintk=ttyS0,115200 ignore_loglevel root=LABEL=rootfs rootfstype=ext4 rootwait rw panic=10 loglevel=8
 EOF
 cp "$ROOTFS/boot/uEnv.txt" "$ROOTFS/uEnv.txt"
 
