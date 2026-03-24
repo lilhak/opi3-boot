@@ -358,8 +358,9 @@ dpkg --add-architecture armhf 2>/dev/null || true
 apt-get update
 
 # Run debootstrap for armhf
-debootstrap --arch=armhf --include=locales,dialog,apt,openssh-server,htop,nano,wget,ca-certificates,net-tools,iproute2,isc-dhcp-client,eudev,kmod,procps,sysvinit-core,ifupdown \
-    daedalus "$ROOTFS" http://deb.devuan.org/merged/
+# Use Debian bookworm (debootstrap knows it) - systemd-free via package removal
+debootstrap --arch=armhf --include=locales,dialog,apt,openssh-server,htop,nano,wget,ca-certificates,net-tools,iproute2,isc-dhcp-client,udev,kmod,procps,ifupdown \
+    bookworm "$ROOTFS" http://deb.debian.org/debian/
 
 echo "Rootfs created successfully!"
 du -sh "$ROOTFS"
@@ -439,21 +440,51 @@ dd if=/dev/zero of="$IMG" bs=1M count=$IMG_SIZE_MB status=progress
 parted -s "$IMG" mklabel msdos
 parted -s "$IMG" mkpart primary ext4 1MiB 100%
 
-# Setup loop device
-LOOP=$(losetup --show -fP "$IMG")
+# Setup loop device with partition scanning
+LOOP=$(losetup --show -f "$IMG")
 echo "Loop device: $LOOP"
 
+# Force kernel to re-read partition table (Docker-safe approach)
+partprobe "$LOOP" 2>/dev/null || true
+kpartx -a "$LOOP" 2>/dev/null || true
+sleep 2
+
+# Try ${LOOP}p1 first, fall back to kpartx /dev/mapper path
+PART_IS_LOOP=""
+PART="${LOOP}p1"
+if [ ! -b "$PART" ]; then
+    # kpartx creates /dev/mapper/loopXp1
+    LOOPNAME=$(basename "$LOOP")
+    PART="/dev/mapper/${LOOPNAME}p1"
+    echo "Using kpartx partition: $PART"
+fi
+
+# If still no partition device, use losetup offset method
+if [ ! -b "$PART" ]; then
+    echo "Falling back to offset-based loop device for partition..."
+    PART=$(losetup --show -f --offset=$((1*1024*1024)) --sizelimit=$(($IMG_SIZE_MB*1024*1024 - 1*1024*1024)) "$IMG")
+    echo "Partition loop: $PART"
+    PART_IS_LOOP=1
+fi
+
 # Format partition
-mkfs.ext4 -F "${LOOP}p1"
+mkfs.ext4 -F -L rootfs "$PART"
 
 # Mount and copy rootfs
 mkdir -p /mnt/sd
-mount "${LOOP}p1" /mnt/sd
+mount "$PART" /mnt/sd
 cp -a "$ROOTFS/"* /mnt/sd/
 sync
 
 # Unmount
 umount /mnt/sd
+
+# Tear down partition access
+if [ -n "$PART_IS_LOOP" ]; then
+    losetup -d "$PART" 2>/dev/null || true
+else
+    kpartx -d "$LOOP" 2>/dev/null || true
+fi
 
 # Write bootloader at 8KB offset
 if [ -f /build/output/u-boot-sunxi-with-spl-arm32.bin ]; then
