@@ -34,46 +34,39 @@ cd "$KDIR"
 # Use multi_v7_defconfig as base
 make ARCH=arm CROSS_COMPILE=$CROSS multi_v7_defconfig
 
-# Add H6-specific options
-cat >> .config << 'EOF'
-CONFIG_ARCH_SUNXI=y
-CONFIG_MACH_SUN50I=y
-CONFIG_SUN50I_DE2_BUS=y
-CONFIG_SUNXI_WATCHDOG=y
-CONFIG_SERIAL_8250_DW=y
-CONFIG_SERIAL_8250_OF=y
-CONFIG_SERIAL_8250_CONSOLE=y
-CONFIG_SERIAL_EARLYCON=y
-CONFIG_MMC_SUNXI=y
-CONFIG_USB_EHCI_HCD_PLATFORM=y
-CONFIG_USB_OHCI_HCD_PLATFORM=y
-CONFIG_NET_VENDOR_STMICRO=y
-CONFIG_STMMAC_ETH=y
-CONFIG_DWMAC_SUN8I=y
-CONFIG_PHY_SUN4I_USB=y
-CONFIG_REGULATOR_AXP20X=y
-CONFIG_MFD_AXP20X_I2C=y
-CONFIG_INPUT_AXP20X_PEK=y
-CONFIG_SND_SUN4I_CODEC=y
-CONFIG_COMMON_CLK_SUNXI_NG=y
-CONFIG_SUN50I_H6_CCU=y
-CONFIG_SUN50I_H6_R_CCU=y
-CONFIG_PINCTRL_SUN50I_H6=y
-CONFIG_PINCTRL_SUN50I_H6_R=y
-CONFIG_GPIO_SYSFS=y
-CONFIG_DEVTMPFS=y
-CONFIG_DEVTMPFS_MOUNT=y
-# --- Low-level debug: H6 UART0 at 0x05000000 (DesignWare 8250) ---
-CONFIG_DEBUG_LL=y
-CONFIG_DEBUG_UART_8250=y
-CONFIG_DEBUG_UART_8250_SHIFT=2
-CONFIG_DEBUG_UART_PHYS=0x05000000
-CONFIG_DEBUG_UART_VIRT=0xf5000000
-CONFIG_DEBUG_LL_INCLUDE="debug/8250.S"
-CONFIG_EARLY_PRINTK=y
-EOF
+# Add H6-specific options using scripts/config to avoid duplicate-key issues
+# (cat >> .config doesn't override existing entries; olddefconfig takes first occurrence)
+H6_ENABLE=(
+    ARCH_SUNXI MACH_SUN50I SUN50I_DE2_BUS SUNXI_WATCHDOG
+    SERIAL_8250_DW SERIAL_8250_OF SERIAL_8250_CONSOLE SERIAL_EARLYCON
+    MMC_SUNXI USB_EHCI_HCD_PLATFORM USB_OHCI_HCD_PLATFORM
+    NET_VENDOR_STMICRO STMMAC_ETH DWMAC_SUN8I PHY_SUN4I_USB
+    REGULATOR_AXP20X MFD_AXP20X_I2C MFD_AXP20X_RSB INPUT_AXP20X_PEK
+    SND_SUN4I_CODEC COMMON_CLK_SUNXI_NG
+    SUN50I_H6_CCU SUN50I_H6_R_CCU
+    PINCTRL_SUN50I_H6 PINCTRL_SUN50I_H6_R
+    GPIO_SYSFS DEVTMPFS DEVTMPFS_MOUNT
+    SUNXI_RSB I2C_MV64XXX
+    DEBUG_LL DEBUG_UART_8250 EARLY_PRINTK
+)
+for opt in "${H6_ENABLE[@]}"; do
+    ./scripts/config --enable "$opt"
+done
+# Set string/hex values that scripts/config --enable can't handle
+./scripts/config --set-val DEBUG_UART_8250_SHIFT 2
+./scripts/config --set-val DEBUG_UART_PHYS 0x05000000
+./scripts/config --set-val DEBUG_UART_VIRT 0xf5000000
+./scripts/config --set-str DEBUG_LL_INCLUDE "debug/8250.S"
 
 make ARCH=arm CROSS_COMPILE=$CROSS olddefconfig
+
+# Verify critical configs survived olddefconfig
+echo "=== Config verification ==="
+for opt in PINCTRL_SUN50I_H6_R SUN50I_H6_CCU SUN50I_H6_R_CCU MMC_SUNXI SUNXI_RSB MFD_AXP20X_RSB REGULATOR_AXP20X; do
+    val=$(grep "CONFIG_${opt}[= ]" .config || echo "MISSING")
+    echo "  $opt: $val"
+done
+echo "==========================="
 
 # --- Patch: Add Cortex-A53 CPU ID to proc-v7.S ---
 # The Cortex-A53 (MIDR 0x410fd03x) runs AArch32 at all exception levels
@@ -107,6 +100,20 @@ __v7_ca53mp_proc_info:\
     echo "  Added Cortex-A53 (0x410fd03x) proc_info entry to proc-v7.S"
 else
     echo "  Cortex-A53 CPU ID already present or proc-v7.S not found"
+fi
+
+# --- Patch: Remove ARM64 dependency from H6 CCU Kconfig ---
+# The H6 CCU and R_CCU drivers have "depends on ARM64 || COMPILE_TEST"
+# which prevents them from building on ARM (32-bit). We patch the Kconfig
+# to allow building on ARM as well.
+CCU_KCONFIG="drivers/clk/sunxi-ng/Kconfig"
+if [ -f "$CCU_KCONFIG" ] && grep -q 'SUN50I_H6_CCU' "$CCU_KCONFIG"; then
+    echo "Patching CCU Kconfig: Allowing H6 CCU on ARM32..."
+    sed -i '/config SUN50I_H6_CCU/{n;n;n;s/depends on ARM64 || COMPILE_TEST/depends on ARM64 || ARM || COMPILE_TEST/}' "$CCU_KCONFIG"
+    sed -i '/config SUN50I_H6_R_CCU/{n;n;n;s/depends on ARM64 || COMPILE_TEST/depends on ARM64 || ARM || COMPILE_TEST/}' "$CCU_KCONFIG"
+    # Also check SUN50I_H616_CCU in case it's needed for shared code
+    sed -i '/config SUN50I_H616_CCU/{n;n;n;s/depends on ARM64 || COMPILE_TEST/depends on ARM64 || ARM || COMPILE_TEST/}' "$CCU_KCONFIG"
+    echo "  H6 CCU Kconfig patched for ARM32 support"
 fi
 
 # --- Patch: Add H6 SMP support to platsmp.c ---
@@ -416,14 +423,22 @@ cp "$WORK/output/"*.dtb "$ROOTFS/boot/" 2>/dev/null || true
 
 # Create boot.scr source
 cat > "$ROOTFS/boot/boot.cmd" << 'EOF'
-setenv bootargs console=ttyS0,115200 earlycon=uart8250,mmio32,0x05000000 earlyprintk root=LABEL=rootfs rootfstype=ext4 rootwait rw panic=10 loglevel=8
+echo "=== OPi3 boot.scr running ==="
+setenv bootargs console=ttyS0,115200 earlycon=uart8250,mmio32,0x05000000 earlyprintk ignore_loglevel root=LABEL=rootfs rootfstype=ext4 rootwait rw panic=10 loglevel=8
 load mmc 0:1 0x42000000 /boot/zImage || load mmc 1:1 0x42000000 /boot/zImage
 load mmc 0:1 0x44000000 /boot/sun50i-h6-orangepi-3.dtb || load mmc 1:1 0x44000000 /boot/sun50i-h6-orangepi-3.dtb
 bootz 0x42000000 - 0x44000000
 EOF
 
-# Build boot.scr
+# Build boot.scr and place at both /boot/ and root for U-Boot to find
 mkimage -C none -A arm -T script -d "$ROOTFS/boot/boot.cmd" "$ROOTFS/boot/boot.scr"
+cp "$ROOTFS/boot/boot.scr" "$ROOTFS/boot.scr"
+
+# Also create uEnv.txt as fallback for U-Boot configs that read it
+cat > "$ROOTFS/boot/uEnv.txt" << 'EOF'
+bootargs=console=ttyS0,115200 earlycon=uart8250,mmio32,0x05000000 earlyprintk ignore_loglevel root=LABEL=rootfs rootfstype=ext4 rootwait rw panic=10 loglevel=8
+EOF
+cp "$ROOTFS/boot/uEnv.txt" "$ROOTFS/uEnv.txt"
 
 echo "Rootfs configuration complete."
 
