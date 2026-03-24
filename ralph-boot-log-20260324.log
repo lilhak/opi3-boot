@@ -1,0 +1,416 @@
+Starting kernel ...
+
+[    0.000000] Booting Linux on physical CPU 0x0
+[    0.000000] Linux version 6.6.70-dirty (root@3e3a15f131ea) (arm-linux-gnueabihf-gcc (Debian 12.2.0-14) 12.2.0, GNU ld (GNU Binutils for Debian) 2.40) #1 SMP Tue Mar 24 07:03:13 UTC 2026
+[    0.000000] CPU: ARMv7 Processor [410fd034] revision 4 (ARMv7), cr=10c5383d
+[    0.000000] CPU: div instructions available: patching division code
+[    0.000000] CPU: PIPT / VIPT nonaliasing data cache, VIPT aliasing instruction cache
+[    0.000000] OF: fdt: Machine model: OrangePi 3
+[    0.000000] earlycon: uart8250 at MMIO32 0x05000000 (options '')
+[    0.000000] printk: bootconsole [uart8250] enabled
+[    0.000000] printk: bootconsole [earlycon0] enabled
+[    0.000000] Booting Linux on physical CPU 0x0
+[    0.000000] Linux version 6.6.70-dirty (root@3e3a15f131ea) (arm-linux-gnueabihf-gcc (Debian 12.2.0-14) 12.2.0, GNU ld (GNU Binutils for Debian) 2.40) #1 SMP Tue Mar 24 07:03:13 UTC 2026
+[    0.000000] CPU: ARMv7 Processor [410fd034] revision 4 (ARMv7), cr=10c5383d
+[    0.000000] CPU: div instructions available: patching division code
+[    0.000000] CPU: PIPT / VIPT nonaliasing data cache, VIPT aliasing instruction cache
+[    0.000000] OF: fdt: Machine model: OrangePi 3
+[    0.000000] earlycon: uart8250 at MMIO32 0x05000000 (options '')
+[    0.000000] printk: bootconsole [uart8250] enabled
+[    0.000000] printk: bootconsole [earlycon0] enabled
+[    0.000000] printk: debug: ignoring loglevel setting.
+[    0.000000] printk: debug: ignoring loglevel setting.
+[    0.000000] printk: debug: skip boot console de-registration.
+[    0.000000] printk: debug: skip boot console de-registration.
+[    0.000000] Memory policy: Data cache writealloc
+[    0.000000] Memory policy: Data cache writealloc
+[    0.000000] efi: UEFI not found.
+[    0.000000] efi: UEFI not found.
+[    0.000000] cma: Reserved 64 MiB at 0xbc000000 on node -1
+[    0.000000] cma: Reserved 64 MiB at 0xbc000000 on node -1
+[    0.000000] Zone ranges:
+[    0.000000] Zone ranges:
+[    0.000000]   DMA      [mem 0x0000000040000000-0x000000006fffffff]
+[    0.000000]   DMA      [mem 0x0000000040000000-0x000000006fffffff]
+[    0.000000]   Normal   empty
+[    0.000000]   Normal   empty
+[    0.000000]   HighMem  [mem 0x0000000070000000-0x00000000bfffffff]
+[    0.000000]   HighMem  [mem 0x0000000070000000-0x00000000bfffffff]
+[    0.000000] Movable zone start for each node
+[    0.000000] Movable zone start for each node
+[    0.000000] Early memory node ranges
+[    0.000000] Early memory node ranges
+[    0.000000]   node   0: [mem 0x0000000040000000-0x00000000bfffffff]
+[    0.000000]   node   0: [mem 0x0000000040000000-0x00000000bfffffff]
+[    0.000000] Initmem setup node 0 [mem 0x0000000040000000-0x00000000bfffffff]
+[    0.000000] Initmem setup node 0 [mem 0x0000000040000000-0x00000000bfffffff]
+[    0.000000] percpu: Embedded 16 pages/cpu s36244 r8192 d21100 u65536
+[    0.000000] percpu: Embedded 16 pages/cpu s36244 r8192 d21100 u65536
+[    0.000000] pcpu-alloc: s36244 r8192 d21100 u65536 alloc=16*4096
+[    0.000000] pcpu-alloc: s36244 r8192 d21100 u65536 alloc=16*4096
+[    0.000000] pcpu-alloc: [0] 0 [0] 1 [0] 2 [0] 3 
+[    0.000000] pcpu-alloc: [0] 0 [0] 1 [0] 2 [0] 3 
+[    0.000000] Kernel command line: console=ttyS0,115200 earlycon=uart8250,mmio32,0x05000000 earlyprintk=ttyS0,115200 ignore_loglevel keep_bootcon root=/dev/mmcblk0p1 rootwait rw panic=10 loglevel=8
+[    0.000000] Kernel command line: console=ttyS0,115200 earlycon=uart8250,mmio32,0x05000000 earlyprintk=ttyS0,115200 ignore_loglevel keep_bootcon root=/dev/mmcblk0p1 rootwait rw panic=10 loglevel=8
+[    0.000000] Dentry cache hash table entries: 131072 (order: 7, 524288 bytes, linear)
+[    0.000000] Dentry cache hash table entries: 131072 (order: 7, 524288 bytes, linear)
+[    0.000000] Inode-cache hash table entries: 65536 (order: 6, 262144 bytes, linear)
+[    0.000000] Inode-cache hash table entries: 65536 (order: 6, 262144 bytes, linear)
+[    0.000000] Built 1 zonelists, mobility grouping on.  Total pages: 522752
+[    0.000000] Built 1 zonelists, mobility grouping on.  Total pages: 522752
+[    0.000000] mem auto-init: stack:all(zero), heap alloc:off, heap free:off
+[    0.000000] mem auto-init: stack:all(zero), heap alloc:off, heap free:off
+[    0.000000] Memory: 1986540K/2097152K available (15360K kernel code, 2520K rwdata, 6476K rodata, 2048K init, 419K bss, 45076K reserved, 65536K cma-reserved, 1245184K highmem)
+[    0.000000] Memory: 1986540K/2097152K available (15360K kernel code, 2520K rwdata, 6476K rodata, 2048K init, 419K bss, 45076K reserved, 65536K cma-reserved, 1245184K highmem)
+[    0.000000] SLUB: HWalign=64, Order=0-3, MinObjects=0, CPUs=4, Nodes=1
+[    0.000000] SLUB: HWalign=64, Order=0-3, MinObjects=0, CPUs=4, Nodes=1
+[    0.000000] rcu: Hierarchical RCU implementation.
+[    0.000000] rcu: Hierarchical RCU implementation.
+[    0.000000] rcu:     RCU event tracing is enabled.
+[    0.000000] rcu:     RCU event tracing is enabled.
+[    0.000000] rcu:     RCU restricting CPUs from NR_CPUS=16 to nr_cpu_ids=4.
+[    0.000000] rcu:     RCU restricting CPUs from NR_CPUS=16 to nr_cpu_ids=4.
+[    0.000000] rcu: RCU calculated value of scheduler-enlistment delay is 10 jiffies.
+[    0.000000] rcu: RCU calculated value of scheduler-enlistment delay is 10 jiffies.
+[    0.000000] rcu: Adjusting geometry for rcu_fanout_leaf=16, nr_cpu_ids=4
+[    0.000000] rcu: Adjusting geometry for rcu_fanout_leaf=16, nr_cpu_ids=4
+[    0.000000] NR_IRQS: 16, nr_irqs: 16, preallocated irqs: 16
+[    0.000000] NR_IRQS: 16, nr_irqs: 16, preallocated irqs: 16
+[    0.000000] rcu: srcu_init: Setting srcu_struct sizes based on contention.
+[    0.000000] rcu: srcu_init: Setting srcu_struct sizes based on contention.
+[    0.000000] arch_timer: cp15 timer(s) running at 24.00MHz (virt).
+[    0.000000] arch_timer: cp15 timer(s) running at 24.00MHz (virt).
+[    0.000000] clocksource: arch_sys_counter: mask: 0xffffffffffffff max_cycles: 0x588fe9dc0, max_idle_ns: 440795202592 ns
+[    0.000000] clocksource: arch_sys_counter: mask: 0xffffffffffffff max_cycles: 0x588fe9dc0, max_idle_ns: 440795202592 ns
+[    0.000000] sched_clock: 56 bits at 24MHz, resolution 41ns, wraps every 4398046511097ns
+[    0.000000] sched_clock: 56 bits at 24MHz, resolution 41ns, wraps every 4398046511097ns
+[    0.017560] Switching to timer-based delay loop, resolution 41ns
+[    0.017560] Switching to timer-based delay loop, resolution 41ns
+[    0.031411] clocksource: timer: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 79635851949 ns
+[    0.031411] clocksource: timer: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 79635851949 ns
+[    0.054256] Console: colour dummy device 80x30
+[    0.054256] Console: colour dummy device 80x30
+[    0.064037] Calibrating delay loop (skipped), value calculated using timer frequency.. 48.00 BogoMIPS (lpj=240000)
+[    0.064037] Calibrating delay loop (skipped), value calculated using timer frequency.. 48.00 BogoMIPS (lpj=240000)
+[    0.086766] CPU: Testing write buffer coherency: ok
+[    0.086766] CPU: Testing write buffer coherency: ok
+[    0.097494] pid_max: default: 32768 minimum: 301
+[    0.097494] pid_max: default: 32768 minimum: 301
+[    0.107718] Mount-cache hash table entries: 2048 (order: 1, 8192 bytes, linear)
+[    0.107718] Mount-cache hash table entries: 2048 (order: 1, 8192 bytes, linear)
+[    0.123763] Mountpoint-cache hash table entries: 2048 (order: 1, 8192 bytes, linear)
+[    0.123763] Mountpoint-cache hash table entries: 2048 (order: 1, 8192 bytes, linear)
+[    0.141404] CPU0: thread -1, cpu 0, socket 0, mpidr 80000000
+[    0.141404] CPU0: thread -1, cpu 0, socket 0, mpidr 80000000
+[    0.153842] H6 SMP: CPUCFG at (ptrval), R_CPUCFG at (ptrval)
+[    0.153842] H6 SMP: CPUCFG at (ptrval), R_CPUCFG at (ptrval)
+[    0.166951] Setting up static identity map for 0x40300000 - 0x403000ac
+[    0.166951] Setting up static identity map for 0x40300000 - 0x403000ac
+[    0.182144] rcu: Hierarchical SRCU implementation.
+[    0.182144] rcu: Hierarchical SRCU implementation.
+[    0.192654] rcu:     Max phase no-delay instances is 1000.
+[    0.192654] rcu:     Max phase no-delay instances is 1000.
+[    0.206221] EFI services will not be available.
+[    0.206221] EFI services will not be available.
+[    0.216385] smp: Bringing up secondary CPUs ...
+[    0.216385] smp: Bringing up secondary CPUs ...
+[    1.286821] CPU1: failed to come online
+[    1.286821] CPU1: failed to come online
+[    2.327361] CPU2: failed to come online
+[    2.327361] CPU2: failed to come online
+[    3.367955] CPU3: failed to come online
+[    3.367955] CPU3: failed to come online
+[    3.376571] smp: Brought up 1 node, 1 CPU
+[    3.376571] smp: Brought up 1 node, 1 CPU
+[    3.385552] SMP: Total of 1 processors activated (48.00 BogoMIPS).
+[    3.385552] SMP: Total of 1 processors activated (48.00 BogoMIPS).
+[    3.399395] CPU: All CPU(s) started in SVC mode.
+[    3.399395] CPU: All CPU(s) started in SVC mode.
+[    3.410345] devtmpfs: initialized
+[    3.410345] devtmpfs: initialized
+[    3.423169] VFP support v0.3: implementor 41 architecture 3 part 40 variant 3 rev 4
+[    3.423169] VFP support v0.3: implementor 41 architecture 3 part 40 variant 3 rev 4
+[    3.440552] clocksource: jiffies: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 19112604462750000 ns
+[    3.440552] clocksource: jiffies: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 19112604462750000 ns
+[    3.462625] futex hash table entries: 1024 (order: 4, 65536 bytes, linear)
+[    3.462625] futex hash table entries: 1024 (order: 4, 65536 bytes, linear)
+[    3.480299] pinctrl core: initialized pinctrl subsystem
+[    3.480299] pinctrl core: initialized pinctrl subsystem
+[    3.494428] DMI not present or invalid.
+[    3.494428] DMI not present or invalid.
+[    3.504183] NET: Registered PF_NETLINK/PF_ROUTE protocol family
+[    3.504183] NET: Registered PF_NETLINK/PF_ROUTE protocol family
+[    3.519026] DMA: preallocated 256 KiB pool for atomic coherent allocations
+[    3.519026] DMA: preallocated 256 KiB pool for atomic coherent allocations
+[    3.536647] thermal_sys: Registered thermal governor 'step_wise'
+[    3.536647] thermal_sys: Registered thermal governor 'step_wise'
+[    3.536713] cpuidle: using governor menu
+[    3.536713] cpuidle: using governor menu
+[    3.559221] No ATAGs?
+[    3.559221] No ATAGs?
+[    3.564350] hw-breakpoint: found 5 (+1 reserved) breakpoint and 4 watchpoint registers.
+[    3.564350] hw-breakpoint: found 5 (+1 reserved) breakpoint and 4 watchpoint registers.
+[    3.582287] hw-breakpoint: maximum watchpoint size is 8 bytes.
+[    3.582287] hw-breakpoint: maximum watchpoint size is 8 bytes.
+[    3.597571] Serial: AMBA PL011 UART driver
+[    3.597571] Serial: AMBA PL011 UART driver
+[    3.612837] /soc/bus@1000000/mixer@100000: Fixed dependency cycle(s) with /soc/tcon-top@6510000
+[    3.612837] /soc/bus@1000000/mixer@100000: Fixed dependency cycle(s) with /soc/tcon-top@6510000
+[    3.632434] /soc/interrupt-controller@3021000: Fixed dependency cycle(s) with /soc/interrupt-controller@3021000
+[    3.632434] /soc/interrupt-controller@3021000: Fixed dependency cycle(s) with /soc/interrupt-controller@3021000
+[    3.655337] /soc/hdmi@6000000: Fixed dependency cycle(s) with /soc/tcon-top@6510000
+[    3.655337] /soc/hdmi@6000000: Fixed dependency cycle(s) with /soc/tcon-top@6510000
+[    3.672530] /soc/tcon-top@6510000: Fixed dependency cycle(s) with /soc/hdmi@6000000
+[    3.672530] /soc/tcon-top@6510000: Fixed dependency cycle(s) with /soc/hdmi@6000000
+[    3.689699] /soc/tcon-top@6510000: Fixed dependency cycle(s) with /soc/lcd-controller@6515000
+[    3.689699] /soc/tcon-top@6510000: Fixed dependency cycle(s) with /soc/lcd-controller@6515000
+[    3.708816] /soc/tcon-top@6510000: Fixed dependency cycle(s) with /soc/bus@1000000/mixer@100000
+[    3.708816] /soc/tcon-top@6510000: Fixed dependency cycle(s) with /soc/bus@1000000/mixer@100000
+[    3.728353] /soc/lcd-controller@6515000: Fixed dependency cycle(s) with /soc/tcon-top@6510000
+[    3.728353] /soc/lcd-controller@6515000: Fixed dependency cycle(s) with /soc/tcon-top@6510000
+[    3.747880] /soc/bus@1000000/mixer@100000: Fixed dependency cycle(s) with /soc/tcon-top@6510000
+[    3.747880] /soc/bus@1000000/mixer@100000: Fixed dependency cycle(s) with /soc/tcon-top@6510000
+[    3.777275] /soc/hdmi@6000000: Fixed dependency cycle(s) with /soc/tcon-top@6510000
+[    3.777275] /soc/hdmi@6000000: Fixed dependency cycle(s) with /soc/tcon-top@6510000
+[    3.795224] /soc/hdmi@6000000: Fixed dependency cycle(s) with /soc/tcon-top@6510000
+[    3.795224] /soc/hdmi@6000000: Fixed dependency cycle(s) with /soc/tcon-top@6510000
+[    3.812455] /soc/bus@1000000/mixer@100000: Fixed dependency cycle(s) with /soc/tcon-top@6510000
+[    3.812455] /soc/bus@1000000/mixer@100000: Fixed dependency cycle(s) with /soc/tcon-top@6510000
+[    3.831991] /soc/tcon-top@6510000: Fixed dependency cycle(s) with /soc/hdmi@6000000
+[    3.831991] /soc/tcon-top@6510000: Fixed dependency cycle(s) with /soc/hdmi@6000000
+[    3.849190] /soc/tcon-top@6510000: Fixed dependency cycle(s) with /soc/lcd-controller@6515000
+[    3.849190] /soc/tcon-top@6510000: Fixed dependency cycle(s) with /soc/lcd-controller@6515000
+[    3.868285] /soc/tcon-top@6510000: Fixed dependency cycle(s) with /soc/bus@1000000/mixer@100000
+[    3.868285] /soc/tcon-top@6510000: Fixed dependency cycle(s) with /soc/bus@1000000/mixer@100000
+[    3.888149] /soc/tcon-top@6510000: Fixed dependency cycle(s) with /soc/lcd-controller@6515000
+[    3.888149] /soc/tcon-top@6510000: Fixed dependency cycle(s) with /soc/lcd-controller@6515000
+[    3.907326] /soc/lcd-controller@6515000: Fixed dependency cycle(s) with /soc/tcon-top@6510000
+[    3.907326] /soc/lcd-controller@6515000: Fixed dependency cycle(s) with /soc/tcon-top@6510000
+[    3.930114] /soc/hdmi@6000000: Fixed dependency cycle(s) with /connector
+[    3.930114] /soc/hdmi@6000000: Fixed dependency cycle(s) with /connector
+[    3.945211] /connector: Fixed dependency cycle(s) with /soc/hdmi@6000000
+[    3.945211] /connector: Fixed dependency cycle(s) with /soc/hdmi@6000000
+[    3.998762] iommu: Default domain type: Translated
+[    3.998762] iommu: Default domain type: Translated
+[    4.009543] iommu: DMA domain TLB invalidation policy: strict mode
+[    4.009543] iommu: DMA domain TLB invalidation policy: strict mode
+[    4.024261] SCSI subsystem initialized
+[    4.024261] SCSI subsystem initialized
+[    4.048758] libata version 3.00 loaded.
+[    4.048758] libata version 3.00 loaded.
+[    4.057565] usbcore: registered new interface driver usbfs
+[    4.057565] usbcore: registered new interface driver usbfs
+[    4.069898] usbcore: registered new interface driver hub
+[    4.069898] usbcore: registered new interface driver hub
+[    4.081851] usbcore: registered new device driver usb
+[    4.081851] usbcore: registered new device driver usb
+[    4.094552] pps_core: LinuxPPS API ver. 1 registered
+[    4.094552] pps_core: LinuxPPS API ver. 1 registered
+[    4.105685] pps_core: Software ver. 5.3.6 - Copyright 2005-2007 Rodolfo Giometti <giometti@linux.it>
+[    4.105685] pps_core: Software ver. 5.3.6 - Copyright 2005-2007 Rodolfo Giometti <giometti@linux.it>
+[    4.126152] PTP clock support registered
+[    4.126152] PTP clock support registered
+[    4.135076] EDAC MC: Ver: 3.0.0
+[    4.135076] EDAC MC: Ver: 3.0.0
+[    4.195578] scmi_core: SCMI protocol bus registered
+[    4.195578] scmi_core: SCMI protocol bus registered
+[    4.227440] vgaarb: loaded
+[    4.227440] vgaarb: loaded
+[    4.261950] clocksource: Switched to clocksource arch_sys_counter
+[    4.261950] clocksource: Switched to clocksource arch_sys_counter
+[    4.303140] NET: Registered PF_INET protocol family
+[    4.303140] NET: Registered PF_INET protocol family
+[    4.314305] IP idents hash table entries: 16384 (order: 5, 131072 bytes, linear)
+[    4.314305] IP idents hash table entries: 16384 (order: 5, 131072 bytes, linear)
+[    4.332452] tcp_listen_portaddr_hash hash table entries: 512 (order: 0, 4096 bytes, linear)
+[    4.332452] tcp_listen_portaddr_hash hash table entries: 512 (order: 0, 4096 bytes, linear)
+[    4.351192] Table-perturb hash table entries: 65536 (order: 6, 262144 bytes, linear)
+[    4.351192] Table-perturb hash table entries: 65536 (order: 6, 262144 bytes, linear)
+[    4.368531] TCP established hash table entries: 8192 (order: 3, 32768 bytes, linear)
+[    4.368531] TCP established hash table entries: 8192 (order: 3, 32768 bytes, linear)
+[    4.385960] TCP bind hash table entries: 8192 (order: 5, 131072 bytes, linear)
+[    4.385960] TCP bind hash table entries: 8192 (order: 5, 131072 bytes, linear)
+[    4.402405] TCP: Hash tables configured (established 8192 bind 8192)
+[    4.402405] TCP: Hash tables configured (established 8192 bind 8192)
+[    4.416723] UDP hash table entries: 512 (order: 2, 16384 bytes, linear)
+[    4.416723] UDP hash table entries: 512 (order: 2, 16384 bytes, linear)
+[    4.431585] UDP-Lite hash table entries: 512 (order: 2, 16384 bytes, linear)
+[    4.431585] UDP-Lite hash table entries: 512 (order: 2, 16384 bytes, linear)
+[    4.447541] NET: Registered PF_UNIX/PF_LOCAL protocol family
+[    4.447541] NET: Registered PF_UNIX/PF_LOCAL protocol family
+[    4.494746] RPC: Registered named UNIX socket transport module.
+[    4.494746] RPC: Registered named UNIX socket transport module.
+[    4.508019] RPC: Registered udp transport module.
+[    4.508019] RPC: Registered udp transport module.
+[    4.518548] RPC: Registered tcp transport module.
+[    4.518548] RPC: Registered tcp transport module.
+[    4.529074] RPC: Registered tcp-with-tls transport module.
+[    4.529074] RPC: Registered tcp-with-tls transport module.
+[    4.541350] RPC: Registered tcp NFSv4.1 backchannel transport module.
+[    4.541350] RPC: Registered tcp NFSv4.1 backchannel transport module.
+[    4.555823] PCI: CLS 0 bytes, default 64
+[    4.555823] PCI: CLS 0 bytes, default 64
+[    4.566226] Initialise system trusted keyrings
+[    4.566226] Initialise system trusted keyrings
+[    4.590060] workingset: timestamp_bits=30 max_order=19 bucket_order=0
+[    4.590060] workingset: timestamp_bits=30 max_order=19 bucket_order=0
+[    4.604857] squashfs: version 4.0 (2009/01/31) Phillip Lougher
+[    4.604857] squashfs: version 4.0 (2009/01/31) Phillip Lougher
+[    4.645201] NFS: Registering the id_resolver key type
+[    4.645201] NFS: Registering the id_resolver key type
+[    4.656608] Key type id_resolver registered
+[    4.656608] Key type id_resolver registered
+[    4.665991] Key type id_legacy registered
+[    4.665991] Key type id_legacy registered
+[    4.674994] nfs4filelayout_init: NFSv4 File Layout Driver Registering...
+[    4.674994] nfs4filelayout_init: NFSv4 File Layout Driver Registering...
+[    4.690015] nfs4flexfilelayout_init: NFSv4 Flexfile Layout Driver Registering...
+[    4.690015] nfs4flexfilelayout_init: NFSv4 Flexfile Layout Driver Registering...
+[    4.706623] ntfs: driver 2.1.32 [Flags: R/O].
+[    4.706623] ntfs: driver 2.1.32 [Flags: R/O].
+[    4.750183] Key type asymmetric registered
+[    4.750183] Key type asymmetric registered
+[    4.759368] Asymmetric key parser 'x509' registered
+[    4.759368] Asymmetric key parser 'x509' registered
+[    4.770380] bounce: pool size: 64 pages
+[    4.770380] bounce: pool size: 64 pages
+[    4.779005] Block layer SCSI generic (bsg) driver version 0.4 loaded (major 246)
+[    4.779005] Block layer SCSI generic (bsg) driver version 0.4 loaded (major 246)
+[    4.795562] io scheduler mq-deadline registered
+[    4.795562] io scheduler mq-deadline registered
+[    4.805698] io scheduler kyber registered
+[    4.805698] io scheduler kyber registered
+[    4.814707] io scheduler bfq registered
+[    4.814707] io scheduler bfq registered
+[    5.058831] Serial: 8250/16550 driver, 5 ports, IRQ sharing enabled
+[    5.058831] Serial: 8250/16550 driver, 5 ports, IRQ sharing enabled
+[    5.087505] SuperH (H)SCI(F) driver initialized
+[    5.087505] SuperH (H)SCI(F) driver initialized
+[    5.098582] msm_serial: driver initialized
+[    5.098582] msm_serial: driver initialized
+[    5.107791] STMicroelectronics ASC driver initialized
+[    5.107791] STMicroelectronics ASC driver initialized
+[    5.120046] STM32 USART driver initialized
+[    5.120046] STM32 USART driver initialized
+[    5.196798] brd: module loaded
+[    5.196798] brd: module loaded
+[    5.218787] loop: module loaded
+[    5.218787] loop: module loaded
+[    5.237469] CAN device driver interface
+[    5.237469] CAN device driver interface
+[    5.247216] bgmac_bcma: Broadcom 47xx GBit MAC driver loaded
+[    5.247216] bgmac_bcma: Broadcom 47xx GBit MAC driver loaded
+[    5.260986] e1000e: Intel(R) PRO/1000 Network Driver
+[    5.260986] e1000e: Intel(R) PRO/1000 Network Driver
+[    5.272128] e1000e: Copyright(c) 1999 - 2015 Intel Corporation.
+[    5.272128] e1000e: Copyright(c) 1999 - 2015 Intel Corporation.
+[    5.285415] igb: Intel(R) Gigabit Ethernet Network Driver
+[    5.285415] igb: Intel(R) Gigabit Ethernet Network Driver
+[    5.297500] igb: Copyright (c) 2007-2014 Intel Corporation.
+[    5.297500] igb: Copyright (c) 2007-2014 Intel Corporation.
+[    5.313846] pegasus: Pegasus/Pegasus II USB Ethernet driver
+[    5.313846] pegasus: Pegasus/Pegasus II USB Ethernet driver
+[    5.326386] usbcore: registered new interface driver pegasus
+[    5.326386] usbcore: registered new interface driver pegasus
+[    5.339087] usbcore: registered new interface driver asix
+[    5.339087] usbcore: registered new interface driver asix
+[    5.351210] usbcore: registered new interface driver ax88179_178a
+[    5.351210] usbcore: registered new interface driver ax88179_178a
+[    5.364919] usbcore: registered new interface driver cdc_ether
+[    5.364919] usbcore: registered new interface driver cdc_ether
+[    5.378027] usbcore: registered new interface driver smsc75xx
+[    5.378027] usbcore: registered new interface driver smsc75xx
+[    5.390920] usbcore: registered new interface driver smsc95xx
+[    5.390920] usbcore: registered new interface driver smsc95xx
+[    5.403835] usbcore: registered new interface driver net1080
+[    5.403835] usbcore: registered new interface driver net1080
+[    5.416523] usbcore: registered new interface driver cdc_subset
+[    5.416523] usbcore: registered new interface driver cdc_subset
+[    5.429812] usbcore: registered new interface driver zaurus
+[    5.429812] usbcore: registered new interface driver zaurus
+[    5.442346] usbcore: registered new interface driver cdc_ncm
+[    5.442346] usbcore: registered new interface driver cdc_ncm
+[    5.458829] usbcore: registered new interface driver usb-storage
+[    5.458829] usbcore: registered new interface driver usb-storage
+[    5.610993] sun6i-rtc 7000000.rtc: registered as rtc0
+[    5.610993] sun6i-rtc 7000000.rtc: registered as rtc0
+[    5.622378] sun6i-rtc 7000000.rtc: setting system clock to 1970-01-01T00:00:10 UTC (10)
+[    5.622378] sun6i-rtc 7000000.rtc: setting system clock to 1970-01-01T00:00:10 UTC (10)
+[    5.641439] i2c_dev: i2c /dev entries driver
+[    5.641439] i2c_dev: i2c /dev entries driver
+[    5.695684] sunxi-wdt 7020400.watchdog: Watchdog enabled (timeout=16 sec, nowayout=0)
+[    5.695684] sunxi-wdt 7020400.watchdog: Watchdog enabled (timeout=16 sec, nowayout=0)
+[    5.718290] sdhci: Secure Digital Host Controller Interface driver
+[    5.718290] sdhci: Secure Digital Host Controller Interface driver
+[    5.732201] sdhci: Copyright(c) Pierre Ossman
+[    5.732201] sdhci: Copyright(c) Pierre Ossman
+[    5.743632] Synopsys Designware Multimedia Card Interface Driver
+[    5.743632] Synopsys Designware Multimedia Card Interface Driver
+[    5.758789] sdhci-pltfm: SDHCI platform and OF driver helper
+[    5.758789] sdhci-pltfm: SDHCI platform and OF driver helper
+[    5.824117] ledtrig-cpu: registered to indicate activity on CPUs
+[    5.824117] ledtrig-cpu: registered to indicate activity on CPUs
+[    5.839656] usbcore: registered new interface driver usbhid
+[    5.839656] usbcore: registered new interface driver usbhid
+[    5.852198] usbhid: USB HID core driver
+[    5.852198] usbhid: USB HID core driver
+[    5.867188] NET: Registered PF_INET6 protocol family
+[    5.867188] NET: Registered PF_INET6 protocol family
+[    5.921781] Segment Routing with IPv6
+[    5.921781] Segment Routing with IPv6
+[    5.930055] In-situ OAM (IOAM) with IPv6
+[    5.930055] In-situ OAM (IOAM) with IPv6
+[    5.938921] sit: IPv6, IPv4 and MPLS over IPv4 tunneling driver
+[    5.938921] sit: IPv6, IPv4 and MPLS over IPv4 tunneling driver
+[    5.952843] NET: Registered PF_PACKET protocol family
+[    5.952843] NET: Registered PF_PACKET protocol family
+[    5.964153] can: controller area network core
+[    5.964153] can: controller area network core
+[    5.973940] NET: Registered PF_CAN protocol family
+[    5.973940] NET: Registered PF_CAN protocol family
+[    5.984680] can: raw protocol
+[    5.984680] can: raw protocol
+[    5.991315] can: broadcast manager protocol
+[    5.991315] can: broadcast manager protocol
+[    6.000674] can: netlink gateway - max_hops=1
+[    6.000674] can: netlink gateway - max_hops=1
+[    6.010960] Key type dns_resolver registered
+[    6.010960] Key type dns_resolver registered
+[    6.020787] Registering SWP/SWPB emulation handler
+[    6.020787] Registering SWP/SWPB emulation handler
+[    6.088553] Loading compiled-in X.509 certificates
+[    6.088553] Loading compiled-in X.509 certificates
+[    6.145010] /soc/tcon-top@6510000: Fixed dependency cycle(s) with /soc/bus@1000000/mixer@100000
+[    6.145010] /soc/tcon-top@6510000: Fixed dependency cycle(s) with /soc/bus@1000000/mixer@100000
+[    6.164708] /soc/bus@1000000/mixer@100000: Fixed dependency cycle(s) with /soc/tcon-top@6510000
+[    6.164708] /soc/bus@1000000/mixer@100000: Fixed dependency cycle(s) with /soc/tcon-top@6510000
+[    6.190088] gpio gpiochip0: Static allocation of GPIO base is deprecated, use dynamic allocation.
+[    6.190088] gpio gpiochip0: Static allocation of GPIO base is deprecated, use dynamic allocation.
+[    6.238035] sun50i-h6-r-pinctrl 7022000.pinctrl: initialized sunXi PIO driver[    6.238035] sun50i-h6-r-pinctrl 7022000.pinctrl: initialized sunXi PIO driver
+[    6.273370] sun50i-h6-r-pinctrl 7022000.pinctrl: supply vcc-pm not found, using dummy regulator
+[    6.273370] sun50i-h6-r-pinctrl 7022000.pinctrl: supply vcc-pm not found, using dummy regulator
+[    6.295914] sun50i-h6-r-pinctrl 7022000.pinctrl: supply vcc-pl not found, using dummy regulator
+[    6.295914] sun50i-h6-r-pinctrl 7022000.pinctrl: supply vcc-pl not found, using dummy regulator
+[    6.327606] sunxi-rsb 7083000.rsb: RSB running at 3000000 Hz
+[    6.327606] sunxi-rsb 7083000.rsb: RSB running at 3000000 Hz
+[    6.400254] axp20x-rsb sunxi-rsb-745: AXP20x variant AXP806 found
+[    6.400254] axp20x-rsb sunxi-rsb-745: AXP20x variant AXP806 found
+[    6.517016] input: axp20x-pek as /devices/platform/soc/7083000.rsb/sunxi-rsb-745/axp221-pek/input/input0
+[    6.517016] input: axp20x-pek as /devices/platform/soc/7083000.rsb/sunxi-rsb-745/axp221-pek/input/input0
+[    6.555198] axp20x-rsb sunxi-rsb-745: AXP20X driver loaded
+[    6.555198] axp20x-rsb sunxi-rsb-745: AXP20X driver loaded
+[    6.570170] gpio gpiochip1: Static allocation of GPIO base is deprecated, use dynamic allocation.
+[    6.570170] gpio gpiochip1: Static allocation of GPIO base is deprecated, use dynamic allocation.
+[    6.610616] sun50i-h6-pinctrl 300b000.pinctrl: initialized sunXi PIO driver
+[    6.610616] sun50i-h6-pinctrl 300b000.pinctrl: initialized sunXi PIO driver
+[    6.628489] sun50i-h6-pinctrl 300b000.pinctrl: supply vcc-ph not found, using dummy regulator
+[    6.628489] sun50i-h6-pinctrl 300b000.pinctrl: supply vcc-ph not found, using dummy regulator
+[    6.648533] vdd-cpu: Bringing 600000uV into 800000-800000uV
+[    6.648533] vdd-cpu: Bringing 600000uV into 800000-800000uV
+[    6.675433] printk: console [ttyS0] disabled
+[    6.675433] printk: console [ttyS0] disabled
+�[    6.706914] 5000000.serial: ttyS0 at MMIO 0x5000000 (irq = 245, base_baud = 1500000) is a 16550A
+[    6.706914] 5000000.serial: ttyS0 at MMIO 0x5000000 (irq = 245, base_baud = 1500000) is a 16550A
+[    6.726699] printk: console [ttyS0] enabled
+[    6.726699] printk: console [ttyS0] enabled
+[    6.726699] printk: console [ttyS0] enabled
